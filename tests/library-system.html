@@ -1,0 +1,89 @@
+<script src="../simpletest.js"></script>
+<script src="../library-system.js"></script>
+<script>
+tests({
+  'librarySystem should store a library which can be retrieved.': function() {
+    var retreivedLibrary;
+    librarySystem('library', [], function() {
+      return 'retreived';
+    });
+    retreivedLibrary = librarySystem('library');
+
+    eq('retreived', retreivedLibrary);
+  },
+  'librarySystem should run the callback for each library': function() {
+    var count = 0;
+    var lib1;
+    var lib2;
+
+    librarySystem('lib1', [], function() {
+      return count++;
+    });
+    librarySystem('lib2', [], function() {
+      return count++;
+    });
+    var lib1 = librarySystem('lib1');
+    var lib2 = librarySystem('lib2');
+
+    eq(2, count);
+  },
+  'librarySystem should accept a list of dependencies for each library which are passed as arguments to the callback.': function() {
+    var lib3;
+    librarySystem('lib1', [], function() {
+      return 'returned';
+    });
+    librarySystem('lib2', [], function() {
+      return 'arguments';
+    });
+    librarySystem('lib3', ['lib1', 'lib2'], function(lib1, lib2) {
+      return lib1 + ' ' + lib2;
+    });
+    lib3 = librarySystem('lib3');
+
+    eq('returned arguments', lib3);
+  },
+  'A library\'s dependencies should be retreived before the library is returned.': function() {
+    var count = 0;
+    var lib2;
+
+    librarySystem('lib1', [], function() {
+      return count++;
+    });
+    librarySystem('lib2', ['lib1'], function(lib1) {
+      eq(1, count);
+      return 'success';
+    });
+    var lib2 = librarySystem('lib2');
+
+    eq('success', lib2);
+  },
+  'A library\'s callback should be run only once.': function() {
+    var count = 0;
+    var lib1;
+    var lib2;
+
+    librarySystem('lib1', [], function() {
+      return count++;
+    });
+    lib1 = librarySystem('lib1');
+    lib2 = librarySystem('lib1');
+
+    eq(1, count);
+  },
+  'A library should have the ability to be defined before it\'s dependencies.': function() {
+    var lib3;
+    librarySystem('lib3', ['lib1', 'lib2'], function(lib1, lib2) {
+      return lib1 + ' ' + lib2;
+    });
+    librarySystem('lib1', [], function() {
+      return 'returned';
+    });
+    librarySystem('lib2', [], function() {
+      return 'arguments';
+    });
+    lib3 = librarySystem('lib3');
+
+    eq('returned arguments', lib3);
+  }
+});
+</script>
